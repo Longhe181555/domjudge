@@ -622,5 +622,79 @@ CREATE TABLE `userrole` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Many-to-Many mapping of users and roles'
 SQL
         );
+    
+    // Table structure for table `contest_display_data`
+        $this->addSql(<<<SQL
+CREATE TABLE `contest_display_data` (
+    `contest_id` int(4) unsigned NOT NULL,
+    `title` varchar(255) DEFAULT NULL COMMENT 'Display title for the contest',
+    `subtitle` varchar(255) DEFAULT NULL COMMENT 'Display subtitle for the contest',
+    `banner_url` varchar(255) DEFAULT NULL COMMENT 'Banner image URL or path',
+    `description` text DEFAULT NULL COMMENT 'Long description or HTML for contest display',
+    `meta_data` json DEFAULT NULL COMMENT 'Flexible meta data for contest display',
+    `allow_phase` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Allow phase in this contest',
+    PRIMARY KEY (`contest_id`),
+    CONSTRAINT `contest_display_data_ibfk_1` FOREIGN KEY (`contest_id`) REFERENCES `contest` (`cid`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Display data for contests (extension table)'
+SQL
+        );
+
+        // Table structure for table `phase`
+        $this->addSql(<<<SQL
+CREATE TABLE `phase` (
+    `phaseid` int(4) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Phase ID',
+    `cid` int(4) unsigned NOT NULL,
+    `name` varchar(100) NOT NULL COMMENT 'Phase name',
+    `starttime` decimal(32,9) unsigned DEFAULT NULL COMMENT 'Phase start time (epoch)',
+    `endtime` decimal(32,9) unsigned DEFAULT NULL COMMENT 'Phase end time (epoch)',
+    `description` text DEFAULT NULL COMMENT 'Phase description',
+    `allow_submit` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Allow submissions in this phase',
+    `allow_manual_judge` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Allow manual judging in this phase',
+    `allow_automatic_judge` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Allow automatic judging in this phase',
+    `phase_order` int(10) unsigned NOT NULL DEFAULT 1 COMMENT 'Order of this phase in the contest',
+    `metadata` json DEFAULT NULL COMMENT 'Extra metadata for this phase',
+    PRIMARY KEY (`phaseid`),
+    KEY `cid_phaseorder` (`cid`,`phase_order`),
+    UNIQUE KEY `unique_phase_per_order_per_contest` (`cid`,`phase_order`),
+    CONSTRAINT `phase_ibfk_1` FOREIGN KEY (`cid`) REFERENCES `contest` (`cid`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Phases for contests (multi-phase/hackathon support)'
+SQL
+        );
+
+        // Table structure for table `problem_display_data`
+        $this->addSql(<<<SQL
+CREATE TABLE `problem_display_data` (
+    `pdisplayid` int(4) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+    `problem_id` int(4) unsigned NOT NULL COMMENT 'Problem ID',
+    `display_name` varchar(255) DEFAULT NULL COMMENT 'Display/alternate name for the problem',
+    `description` text DEFAULT NULL COMMENT 'Rich HTML description for the problem',
+    `image_url` varchar(255) DEFAULT NULL COMMENT 'Main image/banner URL for the problem',
+    `attachments` json DEFAULT NULL COMMENT 'List of attachment files (name, url, type, etc)',
+    `meta_data` json DEFAULT NULL COMMENT 'Flexible extra display metadata',
+    `created_at` datetime NOT NULL COMMENT 'Created at',
+    `updated_at` datetime NOT NULL COMMENT 'Last updated at',
+    PRIMARY KEY (`pdisplayid`),
+    UNIQUE KEY `unique_problem_display_data` (`problem_id`),
+    KEY `problem_id_idx` (`problem_id`),
+    CONSTRAINT `problem_display_data_ibfk_1` FOREIGN KEY (`problem_id`) REFERENCES `problem` (`probid`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Display/UX extension data for problems'
+SQL
+        );
+        // Table structure for table `phase_problem`
+        $this->addSql(<<<SQL
+CREATE TABLE `phase_problem` (
+    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+    `phase_id` int(4) unsigned NOT NULL,
+    `problem_id` int(4) unsigned NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `phase_id_idx` (`phase_id`),
+    KEY `problem_id_idx` (`problem_id`),
+    CONSTRAINT `phase_problem_ibfk_1` FOREIGN KEY (`phase_id`) REFERENCES `phase` (`phaseid`) ON DELETE CASCADE,
+    CONSTRAINT `phase_problem_ibfk_2` FOREIGN KEY (`problem_id`) REFERENCES `problem` (`probid`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Links problems to phases';
+SQL
+        );
+
+
     }
 }

@@ -84,6 +84,22 @@
                     <a class="nav-link" target="_top" href="{{ path('team_index') }}"><i class="fas fa-arrow-right"></i> team</a>
                 </li>
             {% endif %}
+
+            {# Extension Plugins dropdown #}
+            {% if is_granted('ROLE_JURY') %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="extensionPluginsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-puzzle-piece"></i> Extension Plugins
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="extensionPluginsDropdown">
+                        <li><a class="dropdown-item" href="{{ path('extensions_plugin') }}">Manage Plugins</a></li>
+                        <li><a class="dropdown-item{% if current_route == 'jury_hackathon' %} active{% endif %}" href="{{ path('jury_hackathon') }}">
+                            <i class="fas fa-lightbulb"></i> Hackathon
+                        </a></li>
+                    </ul>
+                </li>
+            {% endif %}
+
         </ul>
 
         {% if app.debug %}

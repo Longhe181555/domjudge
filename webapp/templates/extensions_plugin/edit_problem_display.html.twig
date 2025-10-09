@@ -1,0 +1,121 @@
+{% extends 'jury/base.html.twig' %}
+
+{% block title %}Edit Display Data - {{ problem.name }}{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ path('jury_hackathon_display', {'contestId': contest.cid}) }}">Overview</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ path('jury_hackathon_problems', {'contestId': contest.cid}) }}">Problems</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ path('jury_hackathon_phases', {'contestId': contest.cid}) }}">Phases</a>
+    </li>
+</ul>
+<div class="container mt-4">
+    <h1>Edit Display Data for <b>{{ problem.name }}</b></h1>
+    <a href="{{ path('jury_hackathon_problems', {'contestId': contest.cid}) }}" class="btn btn-secondary mb-3">&larr; Back to Problem List</a>
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card mb-3">
+                <div class="card-body">
+                    {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+                    {{ form_row(form.displayName) }}
+                    {# Use form_widget to ensure textarea gets the correct id for TinyMCE #}
+                    <div class="mb-3">
+                        {{ form_label(form.description) }}
+                        {{ form_widget(form.description, {'id': 'description-editor'}) }}
+                        {{ form_errors(form.description) }}
+                    </div>
+                    {{ form_row(form.metaData) }}
+                    <div class="mb-3">
+                        {{ form_label(form.attachmentFile) }}
+                        {{ form_widget(form.attachmentFile) }}
+                        <div class="form-text">Any file type allowed. Max 20MB.</div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form_label(form.attachmentLink) }}
+                        {{ form_widget(form.attachmentLink) }}
+                        <div class="form-text">Paste a URL to add as an attachment (e.g. a file, image, or resource link).</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Save</button>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card mb-3">
+                <div class="card-header">Preview</div>
+                <div class="card-body">
+                    <h5 id="preview-displayName">{{ form.displayName.vars.value }}</h5>
+                    <style>
+                    #preview-description img {
+                        max-width: 100%;
+                        height: auto;
+                        display: block;
+                    }
+                    </style>
+                    <div id="preview-description" class="mb-2" style="min-height:2em; border:1px solid #eee; padding:0.5em; background:#fafbfc;">{{ form.description.vars.value|raw }}</div>
+                    <div class="mb-2">
+                        <strong>Metadata:</strong>
+                        <pre id="preview-metaData">{{ form.metaData.vars.value }}</pre>
+                    </div>
+                    <div>
+                        <strong>Attachments:</strong>
+                        <ul id="preview-attachments">
+                        {% if displayData.attachments is iterable %}
+                            {% for att in displayData.attachments %}
+                                <li style="margin-bottom: 0.5em;">
+                                    {% if att.url is defined and att.type is defined and att.type starts with 'image/' %}
+                                        <img src="{{ att.url }}" alt="Attachment" style="max-width: 80px; max-height: 60px; vertical-align: middle; margin-right: 8px;">
+                                    {% elseif att.url is defined and att.type is defined and att.type starts with 'video/' %}
+                                        <video src="{{ att.url }}" controls style="max-width: 80px; max-height: 60px; vertical-align: middle; margin-right: 8px;"></video>
+                                    {% elseif att.url is defined and att.type is defined and att.type == 'link' %}
+                                        <i class="fas fa-link"></i>
+                                    {% elseif att.url is defined %}
+                                        <i class="fas fa-paperclip"></i>
+                                    {% endif %}
+                                    <a href="{{ att.url }}" target="_blank">{{ att.name|default(att.url) }}</a>
+                                    <form method="post" action="{{ path('jury_hackathon_edit_problem_display', {'contestId': contest.cid, 'problemId': problem.probid}) }}" style="display:inline; margin-left:8px;">
+                                        <input type="hidden" name="remove_attachment" value="{{ loop.index0 }}">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remove this attachment?')">Remove</button>
+                                    </form>
+                                    {% if att.type is defined and att.type starts with 'image/' %}
+                                        <span class="ms-2">HTML: <code>&lt;img src="{{ att.url }}" alt="Attachment"&gt;</code></span>
+                                    {% elseif att.type is defined and att.type starts with 'video/' %}
+                                        <span class="ms-2">HTML: <code>&lt;video src="{{ att.url }}" controls&gt;&lt;/video&gt;</code></span>
+                                    {% elseif att.type is defined and att.type == 'link' %}
+                                        <span class="ms-2">HTML: <code>&lt;a href=&quot;{{ att.url }}&quot; target=&quot;_blank&quot;&gt;{{ att.name|default(att.url) }}&lt;/a&gt;</code></span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/js/tinymce_7.1.2/tinymce/js/tinymce/tinymce.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var textarea = document.getElementById('description-editor');
+        if (!textarea) return;
+        tinymce.init({
+            selector: '#description-editor',
+            height: 600,
+            plugins: 'image link code lists table',
+            toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | code',
+            menubar: false,
+            branding: false,
+            license_key: 'gpl',
+            images_upload_url: '/jury/upload-image-endpoint',
+            automatic_uploads: true,
+            images_upload_handler: null // Use default handler for real upload
+        });
+    });
+</script>
+{% endblock %}
