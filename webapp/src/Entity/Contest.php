@@ -266,12 +266,19 @@ class Contest extends BaseApiEntity implements
     #[Serializer\Exclude]
     private ?string $deactivatetimeString = null;
 
+
     #[ORM\Column(
         options: ['comment' => 'Whether this contest can be active', 'default' => 1]
     )]
     #[Serializer\Exclude]
     private bool $enabled = true;
 
+    #[ORM\Column(
+        options: ['comment' => 'Enable hackathon extension for this contest', 'default' => 0]
+    )]
+    #[Serializer\Exclude]
+    private bool $enableHackathon = false;
+   
     #[ORM\Column(
         options: ['comment' => 'Are submissions accepted in this contest?', 'default' => 1]
     )]
@@ -732,6 +739,7 @@ class Contest extends BaseApiEntity implements
         return $this;
     }
 
+
     public function setEnabled(bool $enabled): Contest
     {
         $this->enabled = $enabled;
@@ -741,6 +749,17 @@ class Contest extends BaseApiEntity implements
     public function getEnabled(): bool
     {
         return $this->enabled;
+    }
+
+    public function setEnableHackathon(bool $enableHackathon): Contest
+    {
+        $this->enableHackathon = $enableHackathon;
+        return $this;
+    }
+
+    public function getEnableHackathon(): bool
+    {
+        return $this->enableHackathon;
     }
 
     public function setAllowSubmit(bool $allowSubmit): Contest
